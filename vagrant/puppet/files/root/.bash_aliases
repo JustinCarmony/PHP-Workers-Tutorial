@@ -1,0 +1,1 @@
+alias code='cd /mnt/source'

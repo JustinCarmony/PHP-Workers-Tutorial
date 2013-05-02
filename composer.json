@@ -1,0 +1,7 @@
+{
+    "require": {
+        "silex/silex": "1.0.*@dev",
+        "predis/predis": "0.8.*@dev",
+        "pda/pheanstalk": "dev-master"
+    }
+}
