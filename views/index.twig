@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>PHP Workers Tutorial</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <style type="text/css">
+        body {
+            padding-top: 60px;
+            padding-bottom: 40px;
+        }
+    </style>
+    <!-- <link href="css/bootstrap-responsive.css" rel="stylesheet"> -->
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+
+<div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+        <div class="container">
+            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </a>
+            <a class="brand" href="#">PHP Worker Tutorial</a>
+        </div>
+    </div>
+</div>
+
+<div id="content" class="container">
+    <div style="float:right;">
+        <button id="btnRestartWorkers" class="btn btn-danger">Restart Workers</button>
+    </div>
+    <h1>Worker Status</h1>
+    <div id="worker_list" class="row">
+
+    </div>
+    <h1>Words Lookup</h1>
+    <div id="" class="row">
+        <textarea id="txtWords" rows="2" class="span19" style=" width:700px;">The grey fox jumped over some dumb fence, isn't that how it goes?</textarea>
+        <button id="btnLookupWords" class="btn btn-large btn-info" style="float: right;" type="button">Submit definitions</button>
+    </div>
+    <h1>Returned Definitions</h1>
+    <div id="def_list" class="row">
+
+    </div>
+    <h1>Last XML</h1>
+    <div id="last_xml">
+
+    </div>
+    <div class="row">
+        Go to <a href="/console/?server=127.0.0.1:11300">Beanstalk Console</a>
+    </div>
+
+</div> <!-- /container -->
+
+<!-- Le javascript
+================================================== -->
+<!-- Libraries -->
+<script src="js/lib/md5.js"></script>
+<script src="js/lib/jquery.js"></script>
+<script src="js/lib/bootstrap.js"></script>
+<script src="js/lib/json2.js"></script>
+<script src="js/lib/underscore.js"></script>
+<script src="js/lib/backbone.js"></script>
+
+<!-- App -->
+<script src="js/app.js"></script>
+
+<!-- Templates -->
+<script id="WorkerViewTpl" type="text/template">
+    <div class="span5 well">
+        <div style="float:right"><span class="label <%= status_label %>"><%= status %></span></div>
+        <h3>Worker <%= worker_id %></h3>
+
+        <div class="row">
+            <span class="span2"><strong>hash</strong></span>
+            <span class="span3"><%= worker_hash %></span>
+        </div>
+        <div class="row">
+            <span class="span2"><strong>last word</strong></span>
+            <span class="span3"><%= last_word %></span>
+        </div>
+        <div class="row">
+            <span class="span2"><strong>last definition</strong></span>
+        </div>
+        <p style="height:80px; overflow:scroll;"><%= last_def %></p>
+    </div>
+
+</script>
+
+<script id="LastDefsTpl" type="text/template">
+    <div class="well">
+        <h2><%= word %></h2>
+        <blockquote><%= def %></blockquote>
+    </div>
+
+</script>
+
+</body>
+</html>

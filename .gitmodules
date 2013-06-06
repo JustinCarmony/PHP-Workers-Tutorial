@@ -1,0 +1,3 @@
+[submodule "beanstalk_console"]
+	path = beanstalk_console
+	url = git@github.com:ptrofimov/beanstalk_console.git

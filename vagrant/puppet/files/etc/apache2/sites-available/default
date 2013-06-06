@@ -4,11 +4,9 @@
 	DocumentRoot /mnt/source/public/
 	<Directory />
 		Options FollowSymLinks
-		AllowOverride None
 	</Directory>
 	<Directory /mnt/source/public/>
 		Options Indexes FollowSymLinks MultiViews
-		AllowOverride None
 		Order allow,deny
 		allow from all
 	</Directory>
@@ -38,4 +36,10 @@
         Allow from 127.0.0.0/255.0.0.0 ::1/128
     </Directory>
 
+    Alias /console /mnt/source/beanstalk_console/public
+    <Directory /mnt/source/beanstalk_console/public>
+		Options Indexes FollowSymLinks MultiViews
+		Order allow,deny
+		allow from all
+	</Directory>
 </VirtualHost>

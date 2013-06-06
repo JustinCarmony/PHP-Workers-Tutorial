@@ -8,7 +8,7 @@ class apt-get-update {
   }
 }
 
-$core_tools_packages = ["build-essential", "imagemagick", "sshfs", "git-core", "subversion", "htop", "vim", "curl", "nano"]
+$core_tools_packages = ["build-essential", "imagemagick", "sshfs", "git-core", "subversion", "htop", "vim", "curl", "nano", "screen"]
 
 class core-tools {
   package { $core_tools_packages: ensure => "installed", require => Exec["apt-get update"] }
@@ -102,9 +102,59 @@ class redis {
   }
 }
 
+class workers {
+  require php5, beanstalkd, redis
+
+  # Log Directory
+  file { "/var/log/worker":
+    ensure => "directory",
+}
+
+  cron { "worker 3":
+    command  => "/usr/local/bin/solo -port=5001 /usr/bin/php /mnt/source/cli/worker.php 3 >> /var/log/worker_log_3.log",
+    user     => "root",
+    month    => "*",
+    monthday => "*",
+    hour     => "*",
+    minute   => "*",
+  }
+
+  cron { "worker 4":
+    command  => "/usr/local/bin/solo -port=5002 /usr/bin/php /mnt/source/cli/worker.php 4 >> /var/log/worker_log_4.log",
+    user     => "root",
+    month    => "*",
+    monthday => "*",
+    hour     => "*",
+    minute   => "*",
+  }
+}
+
+class supervisor {
+  require workers
+  package { "supervisor":
+    ensure => installed,
+  }
+
+  service { "supervisor":
+      enable => true,
+    ensure => running,
+    #hasrestart => true,
+    #hasstatus => true,
+    require => Package["supervisor"],
+  }
+
+  file { "/etc/supervisor/supervisord.conf":
+    ensure => file,
+    source => '/puppet-files/etc/supervisor/supervisord.conf',
+    notify => Service['supervisor']
+  }
+}
+
 include apt-get-update
 include core-tools
 include apache2
 include php5
 include beanstalkd
 include redis
+include workers
+include supervisor

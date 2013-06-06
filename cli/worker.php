@@ -1,6 +1,10 @@
 <?php
 
 // Include Autoloader
+
+// Make sure our curent working directory is where the worker is being executed
+chdir(__DIR__);
+
 require_once '../vendor/autoload.php';
 
 require_once '../config.php';
@@ -15,6 +19,11 @@ class DemoWorker
     public $end_time;
     public $time_limit;
     public $run = true;
+    public $status = 'init';
+
+    // Other Details for Reporting
+    public $last_word;
+    public $last_def;
 
     /**
      * @var Pheanstalk_Job
@@ -35,7 +44,7 @@ class DemoWorker
 
     public function __construct($worker_id)
     {
-        if(!is_numeric($worker_id) && $worker_id > 0)
+        if(!is_numeric($worker_id) || $worker_id <= 0)
         {
             throw new Exception("Invalid Worker ID: $worker_id");
         }
@@ -90,6 +99,9 @@ class DemoWorker
         {
             while($this->run)
             {
+                $this->status = 'waiting';
+                $this->Report();
+
                 $job = $this->beanstalk
                     ->watch('system')
                     ->watch('queue')
@@ -100,7 +112,11 @@ class DemoWorker
                 {
                     $this->ProcessJob($job);
                 }
+
+                echo ".";
+                $this->CheckStatus();
             }
+
         }
         catch (Exception $ex)
         {
@@ -108,7 +124,11 @@ class DemoWorker
             var_dump($ex->getTrace());
         }
 
+        // Cleanup any status & connections
         $this->Cleanup();
+
+        // Stop the worker from working
+        return;
     }
 
     /**
@@ -153,12 +173,25 @@ class DemoWorker
     public function Job_Lookup_Word()
     {
         $word = $this->job_details->word;
+        $this->status = 'working';
+
+
+        $this->Report();
+
+        try
+        {
+
+
 
         $url = 'http://www.dictionaryapi.com/api/v1/references/collegiate/xml/'
                 .urlencode($word).'?key='.DICTIONARY_API_KEY;
 
         $contents = @file_get_contents($url);
 
+        /*
+         * I really don't know how to manipulate very complex XML easily in PHP,
+         * so please ignore the hideous hacks that you are about to see.
+         */
         $xml = new SimpleXMLElement($contents);
         $results = $xml->xpath('/entry_list/entry[1]//dt');
         $return = '';
@@ -166,16 +199,37 @@ class DemoWorker
         {
             /* @var $node SimpleXMLElement */
             $string = $node->asXML();
+
+            // Please ignore the developer behind the curtain
             $string = str_replace('<dt>:', '', $string);
             $string = str_replace(':</dt>', '', $string);
             $def = trim(strip_tags($string));
+
+            // Return the longest definition
             if(strlen($def) > strlen($return))
             {
                 $return = $def;
             }
         }
 
-        echo "$word: $return \n";
+        } catch(Exception $ex)
+        {
+            $def = "$word failed: ".$ex->getMessage();
+        }
+
+        $json = json_encode(array(
+            'word' => $word
+            ,'def' => $def
+        ));
+
+
+        $this->last_word = $word;
+        $this->last_def = $def;
+
+        echo "\n $word: $return \n";
+
+        $this->redis->lpush('word.defs', $json);
+        $this->redis->ltrim('word.defs', 0, 20);
 
         $this->beanstalk->delete($this->job);
 
@@ -185,7 +239,7 @@ class DemoWorker
     public function CheckStatus()
     {
         // Checking to see if we've been running too long
-        if(time() < $this->end_time)
+        if(time() > $this->end_time)
         {
             $this->Log("Worker has passed end time. Running Stopped.");
             $this->run = false;
@@ -198,11 +252,35 @@ class DemoWorker
             $this->Log("Worker Version has change from {$this->worker_version} to {$current_version}. Running Stopped.");
             $this->run = false;
         }
+
+        $this->Report();
+    }
+
+    public function Report()
+    {
+        $json = json_encode(array(
+           "worker_id" => $this->worker_id
+            ,"worker_hash" => $this->worker_hash
+            ,"worker_version" => $this->worker_version
+            ,"time_limit" => $this->time_limit
+            ,"end_time" => $this->end_time
+            ,"last_word" => $this->last_word
+            ,"last_def" => $this->last_def
+            ,"status" => $this->status
+        ));
+
+        $this->redis->hset('worker.status', $this->worker_id, $json);
     }
 
     public function Cleanup()
     {
+        $this->status = 'offline';
+        $this->Report();
 
+        $this->redis->disconnect();
+
+        unset($this->beanstalk);
+        unset($this->redis);
     }
 }
 
@@ -210,3 +288,4 @@ $worker = new DemoWorker($argv[1]);
 
 $worker->Setup();
 $worker->Run();
+

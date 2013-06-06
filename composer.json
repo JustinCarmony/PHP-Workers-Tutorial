@@ -2,6 +2,7 @@
     "require": {
         "silex/silex": "1.0.*@dev",
         "predis/predis": "0.8.*@dev",
-        "pda/pheanstalk": "dev-master"
+        "pda/pheanstalk": "dev-master",
+        "twig/twig": "1.*"
     }
 }
