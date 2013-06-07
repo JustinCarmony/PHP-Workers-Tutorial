@@ -133,7 +133,7 @@ class DemoWorker
             while($this->run)
             {
                 // Report our current status
-                $this->status = 'waiting';
+                $this->status = 'listening';
                 $this->Report();
 
                 // Listen to a beanstalk tube
@@ -157,6 +157,8 @@ class DemoWorker
                 // Echo a "." so we know the worker isn't frozen in the logs.
                 echo ".";
 
+                $this->status = 'checking';
+                $this->Report();
                 // Check the status of the worker to see if we need to stop running.
                 $this->CheckStatus();
             }

@@ -43,7 +43,7 @@ $app->get('/workers', function () use ($app){
             case 'offline':
                 $data->status_label = 'label-important';
                 break;
-            case 'waiting':
+            case 'listening':
                 $data->status_label = 'label-info';
                 break;
             default:
