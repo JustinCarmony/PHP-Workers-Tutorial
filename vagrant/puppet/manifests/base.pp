@@ -146,7 +146,8 @@ class supervisor {
   file { "/etc/supervisor/supervisord.conf":
     ensure => file,
     source => '/puppet-files/etc/supervisor/supervisord.conf',
-    notify => Service['supervisor']
+    notify => Service['supervisor'],
+    require => Package["supervisor"]
   }
 }
 
