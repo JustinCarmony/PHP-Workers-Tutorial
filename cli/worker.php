@@ -115,6 +115,8 @@ class DemoWorker
         $this->worker_version = $this->redis->get('worker.version');
 
         $this->Log("Setup Complete");
+        
+        return $this;
     }
 
     // Our main run loop
@@ -338,6 +340,5 @@ class DemoWorker
 
 $worker = new DemoWorker($argv[1]);
 
-$worker->Setup();
-$worker->Run();
+$worker->Setup()->Run();
 
